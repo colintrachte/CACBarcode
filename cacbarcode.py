@@ -39,14 +39,16 @@ class CACBarcode:
         "1": "Foreign Army", "2": "Foreign Navy", "3": "Foreign Marine Corps",
         "4": "Foreign Air Force", "X": "Other"
     }
-
+    
+    #SSN and pdt was dropped from the contents of newer barcodes for obvious reasons.
+    """
     pdt_mapping = {
         "S": "Social Security Number (SSN)", "N": "9 digits, not valid SSN",
         "P": "Special code before SSNs", "D": "Temporary Identifier Number (TIN)",
         "F": "Foreign Identifier Number (FIN)", "T": "Test (858 series)",
         "I": "Individual Taxpayer Identification Number"
     }
-
+    """
     category_mapping = {
         "A": "Active Duty member", "B": "Presidential Appointee", "C": "DoD civil service employee",
         "D": "100% disabled American veteran", "E": "DoD contract employee", "F": "Former member",
@@ -60,10 +62,10 @@ class CACBarcode:
 
     def _getbranch(self, code):
         return self.branch_mapping.get(code, "N/A")
-
+    """
     def _getpdt(self, code):
         return self.pdt_mapping.get(code, "N/A")
-
+    """
     def _getcategory(self, code):
         return self.category_mapping.get(code, "N/A")
 
