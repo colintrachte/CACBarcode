@@ -36,7 +36,7 @@ except:
 print("EDIPI =", edipi)
 ```
 
-The easiest way to use this library is with a barcode scanned connected to a computer.
+The easiest way to use this library is with a barcode scanner connected to a computer.
 The barcode scanner emulates keyboard input, so doing
 ```python
 barcode = PDF417Barcode(input(">"))
