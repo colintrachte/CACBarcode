@@ -1,8 +1,8 @@
 # CACBarcode
-Convert scanned CAC barcodes (PDF417 and Code39) into Python objects with all data parsed. Updated to work with cards that are currently in circulation 2024. A full blown tkinter GUI with .csv export is now included.
+A simple one class library under the MIT license designed to help python programmers who need to parse CAC barcodes (PDF417 and Code39) into Python objects with all data parsed. Updated to work with cards that are currently in circulation 2024. A full blown tkinter GUI with .csv export is now included.
 
-A simple one class library under the MIT license designed to help python programmers who need to parse CAC barcodes.
-
+The original document for the barcode structure was located at http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf
+Since the link appears to be broken, I have uploaded a copy of the pdf to this repo.
 
 # Usage
 ```python
@@ -47,6 +47,3 @@ To easily see the contents of the barcode, simply print the object
 ```python
 print(barcode)
 ```
-
-For more information on CAC barcode structure, see http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf
-Since the link appears to be broken, I have uploaded the pdf to this repo.
