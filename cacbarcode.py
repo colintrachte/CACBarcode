@@ -1,5 +1,4 @@
-__author__ = 'John Kusner'
-
+__author__ = 'John Kusner, Colin Trachte'
 import datetime
 
 _1_jan_1000 = datetime.datetime(1000, 1, 1)
@@ -10,141 +9,63 @@ class CACBarcode:
     """
     def __init__(self):
         pass
-    def read(self, data, count):
-        return data[:count], data[count:]
+    
+    def read(self, data, start, count):
+        # Read `count` characters from `data` starting at `start` and return the read part
+        return data[start:start + count]
+    
+    def readnum(self, data, start, count, base=32):
+        print(data[start:start + count])
+        # Read `count` characters from `data` starting at `start`, convert to integer with the given `base`
+        return int(data[start:start + count], base)
 
-    def readnum(self, data, count, base = 32):
-        return int(data[:count], base), data[count:]
-
-    def readdate(self, data):
-        days, data = self.readnum(data, 4)
+    def readdate(self, data, start):
+        # Read 4 characters from `data` starting at `start`, interpret them as the number of days since 1 Jan 1000
+        days = self.readnum(data, start, 4)
         date = _1_jan_1000 + datetime.timedelta(days=days)
-        return date, data
+        return date
+    
+    def validate_data(self, data):
+        if not isinstance(data, str) or not data:
+            raise ValueError("Data must be a non-empty string")
+
+    """
+    functions below this point, starting with underscore _, are called by constructor, don't call these methods directly
+    http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, page 50-53
+    """
+    branch_mapping = {
+        "A": "USA", "C": "USCG", "D": "DOD", "F": "USAF",
+        "H": "USPHS", "M": "USMC", "N": "USN", "O": "NOAA",
+        "1": "Foreign Army", "2": "Foreign Navy", "3": "Foreign Marine Corps",
+        "4": "Foreign Air Force", "X": "Other"
+    }
+
+    pdt_mapping = {
+        "S": "Social Security Number (SSN)", "N": "9 digits, not valid SSN",
+        "P": "Special code before SSNs", "D": "Temporary Identifier Number (TIN)",
+        "F": "Foreign Identifier Number (FIN)", "T": "Test (858 series)",
+        "I": "Individual Taxpayer Identification Number"
+    }
+
+    category_mapping = {
+        "A": "Active Duty member", "B": "Presidential Appointee", "C": "DoD civil service employee",
+        "D": "100% disabled American veteran", "E": "DoD contract employee", "F": "Former member",
+        "N": "National Guard member", "G": "National Guard member", "H": "Medal of Honor recipient",
+        "I": "Non-DoD Civil Service Employee", "J": "Academy student", "K": "non-appropriated fund (NAF) DoD employee",
+        "L": "Lighthouse service", "M": "Non-Government agency personnel", "O": "Non-DoD contract employee",
+        "Q": "Reserve retiree not yet eligible for retired pay", "R": "Retired Uniformed Service member eligible for retired pay",
+        "V": "Reserve member", "S": "Reserve", "T": "Foreign military member", "U": "Foreign national employee",
+        "W": "DoD Beneficiary", "Y": "Retired DoD Civil Service Employees"
+    }
 
     def _getbranch(self, code):
-        """
-        Called by constructor, don't call this method
-        http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, page 50
-        :param code: Branch Code
-        :return: Branch Service String
-        """
-        # Series of ifs for speed since this is a one way conversion
-        if code == "A": return "USA"
-        if code == "C": return "USCG"
-        if code == "D": return "DOD"
-        if code == "F": return "USAF"
-        if code == "H": return "USPHS"
-        if code == "M": return "USMC"
-        if code == "N": return "USN"
-        if code == "O": return "NOAA"
-        if code == "1": return "Foreign Army"
-        if code == "2": return "Foreign Navy"
-        if code == "3": return "Foreign Marine Corps"
-        if code == "4": return "Foreign Air Force"
-        if code == "X": return "Other"
-        return "N/A"
+        return self.branch_mapping.get(code, "N/A")
 
     def _getpdt(self, code):
-        """
-        Called by constructor, don't call this method
-        http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, page 50
-        :param code: Person Designator Type Code
-        :return: Person Designator Type String
-        """
-        # Series of ifs for speed since this is a one way conversion
-        if code == "S": return "Social Security Number (SSN)"
-        if code == "N": return "9 digits, not valid SSN"
-        if code == "P": return "Special code before SSNs"
-        if code == "D": return "Temporary Identifier Number (TIN)"
-        if code == "F": return "Foreign Identifier Number (FIN)"
-        if code == "T": return "Test (858 series)"
-        if code == "I": return "Individual Taxpayer Identification Number"
-        return "N/A"
+        return self.pdt_mapping.get(code, "N/A")
 
     def _getcategory(self, code):
-        """
-        Called by constructor, don't call this method
-        http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, page 51
-        :param code: Personnel Category Code
-        :return: String of category description
-        """
-        # Series of ifs for speed since this is a one way conversion
-        if code == "A": return "Active Duty member"
-        if code == "B": return "Presidential Appointee"
-        if code == "C": return "DoD civil service employee"
-        if code == "D": return "100% disabled American veteran"
-        if code == "E": return "DoD contract employee"
-        if code == "F": return "Former member"
-        if code == "N" or code == "G": return "National Guard member"
-        if code == "H": return "Medal of Honor recipient"
-        if code == "I": return "Non-DoD Civil Service Employee"
-        if code == "J": return "Academy student"
-        if code == "K": return "non-appropriated fund (NAF) DoD employee"
-        if code == "L": return "Lighthouse service"
-        if code == "M": return "Non-Government agency personnel"
-        if code == "N": return "National Guard member"
-        if code == "O": return "Non-DoD contract employee"
-        if code == "Q": return "Reserve retiree not yet eligible for retired pay"
-        if code == "R": return "Retired Uniformed Service member eligible for retired pay"
-        if code == "V" or code == "S": return "Reserve"
-        if code == "T": return "Foreign military member"
-        if code == "U": return "Foreign national employee"
-        if code == "V": return "Reserve member"
-        if code == "W": return "DoD Beneficiary"
-        if code == "Y": return "Retired DoD Civil Service Employees"
-        return "N/A"
-
-    def _getpect(self, code):
-        """
-        http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, pp. 52-53
-        :param code: PECT code (numeric 01-42)
-        :return: Personnel Entitlement Condition Type
-        """
-        # Series of ifs for speed since this is a one way conversion
-        if code == "01": return "On Active Duty. Segment condition."
-        if code == "02": return "Mobilization. Segment condition."
-        if code == "03": return "On appellate leave. Segment condition."
-        if code == "04": return "Military prisoner. Segment condition."
-        if code == "05": return "POW/MIA. Segment condition."
-        if code == "06": return "Separated from Selected Reserve. Event condition."
-        if code == "07": return "Declared permanently disabled after temporary disability period. Event condition."
-        if code == "08": return "On non-CONUS assignment. Segment condition."
-        if code == "09": return "Living in Guam or Puerto Rico. Segment condition."
-        if code == "10": return "Living in government quarters. Segment condition."
-        if code == "11": return "Death determined to be related to an injury, illness, or disease while on Active duty for training or while traveling to or from a place of duty. Event condition."
-        if code == "12": return "Discharged due to misconduct involving family member abuse. (Sponsors who are eligible for retirement.) Segment condition."
-        if code == "13": return "Granted retired pay. Event condition."
-        if code == "14": return "DoD sponsored in U.S. (foreign military). Segment condition."
-        if code == "15": return "DoD non-sponsored in U.S. (foreign military). Segment condition."
-        if code == "16": return "DoD sponsored overseas. Segment condition."
-        if code == "17": return "Deserter. Segment condition."
-        if code == "18": return "Discharged due to misconduct involving family member abuse. (Sponsors who are not eligible for retirement.) Segment condition."
-        if code == "19": return "Reservist who dies after receiving their 20 year letter. Event condition."
-        if code == "20": return "Transitional assistance (TA-30). Segment condition."
-        if code == "21": return "Transitional assistance (TA-Res). Segment condition."
-        if code == "22": return "Transitional assistance (TA-60). Segment condition."
-        if code == "23": return "Transitional assistance (TA-120). Segment condition."
-        if code == "24": return "Transitional assistance (SSB program). Segment condition."
-        if code == "25": return "Transitional assistance (VSI program). Segment condition."
-        if code == "26": return "Transitional assistance (composite). Segment condition."
-        if code == "27": return "Senior Executive Service (SES)."
-        if code == "28": return "Emergency Essential - overseas only."
-        if code == "29": return "Emergency Essential - CONUS."
-        #                        v   Not sure if this 2 is meant to be here, see pdf page 53
-        if code == "30": return "2Emergency Essential - CONUS in living quarters, living on base, and not drawing a basic allowance for quarters, serving in an emergency essential capacity"
-        if code == "31": return "Reserve Component TA-120 Reserve Component Transition Assistance TA 120 (Jan 1, 2002 or later)"
-        if code == "32": return "On MSC owned and operated vessels Deployed to foreign countries on Military Sealift Command owned and operated vessels. Segment condition."
-        if code == "33": return "Guard/Reserve Alert Notification Period" # this is written twice on the pdf
-        if code == "34" or code == "35": return "Reserve Component TA-180 - 180 days TAMPS for reserve return from named contingencies"
-        if code == "36" or code == "37": return "TA-180 - 180 days TAMP for involuntary separation"
-        if code == "38": return "Living in Government Quarters in Guam or Puerto Rico, Living on base and not drawing an allowance for quarters in Guam or Puerto Rico."
-        if code == "39": return "Reserve Component TA-180 - TAMP - Mobilized for Contingency"
-        if code == "40": return "TA-180 TAMP - SPD Code Separation"
-        if code == "41": return "TA-180 - TAMP - Stop/Loss Separation"
-        if code == "42": return "DoD Non-Sponsored Overseas - Foreign Military personnel serving OCONUS not sponsored by DoD"
-        return ""
-
-
+        return self.category_mapping.get(code, "N/A")
 
 class PDF417Barcode(CACBarcode):
     """
@@ -153,166 +74,48 @@ class PDF417Barcode(CACBarcode):
     """
 
     def __init__(self, data):
+        self.validate_data(data)
         self.data = data
-
-        # 2D barcode Version "1" and Version "N" have 88 and 89 chars
-        # VN's 89'th char is middle initial
-        if len(data) != 88 and len(data) != 89:
-            raise Exception
-
-        # Read the barcode version
-        self.barcode_version, data = self.read(data, 1)
-
-        # Only version 1 and N supported
-        if self.barcode_version != "1" and self.barcode_version != "N":
-            print("Version", self.barcode_version, "not recognized!")
-            raise Exception
-
-        # Read the PDI (Personal Designator Identifier) in base 32
-        self.pdi, data = self.readnum(data, 6)
-
-        # Read personal designator type
-        self.pdt, data = self.read(data, 1)
-
-        # Get PDT name
-        self.pdtname = self._getpdt(self.pdt)
-
-        # Read EDIPI (EDI Person Identifier) in base 32
-        self.edipi, data = self.readnum(data, 7)
-
-        # Read first name
-        self.firstname, data = self.read(data, 20)
-        self.firstname = self.firstname.strip()
-
-        # Read last name
-        self.lastname, data = self.read(data, 26)
-        self.lastname = self.lastname.strip()
-
-        # Full name
-        self.name = self.firstname + " " + self.lastname
-
-        # Read DOB (num of days since 1 Jan 1000)
-        self.dob, data = self.readdate(data)
-
-        # Read PCC (Personnel Category Code)
-        self.pcc, data = self.read(data, 1)
-
-        # Get PCC
-        self.category = self._getcategory(self.pcc)
-
-        # Read Branch Code
-        self.bc, data = self.read(data, 1)
-
-        # Get branch
-        self.branch = self._getbranch(self.bc)
-
-        # Read Personnel Entitlement Condition Type
-        self.pect, data = self.read(data, 2)
-
-        # Get pect description
-        self.pectdesc = self._getpect(self.pect)
-
-        # Read Rank
-        self.rank, data = self.read(data, 6)
-        self.rank = self.rank.strip()
-
-        # Read Pay Plan Code
-        self.ppc, data = self.read(data, 2)
-
-        # Read Pay Plan Grade Code
-        self.ppgc, data = self.read(data, 2)
-
-        # Card issue date (days since 1 Jan 1000)
-        self.issuedate, data = self.readdate(data)
-
-        # Card expiration date
-        self.expdate, data = self.readdate(data)
-
-        # Card instance identifier (random)
-        self.instanceid, data = self.read(data, 1)
-
-        # Middle initial (VN only)
-        self.middleinitial, _ = "", "" if self.barcode_version == "1" else self.read(data, 1)
-
-        # Full name
-        if self.middleinitial != "":
-            self.fullname = self.firstname + " " + self.middleinitial + " " + self.lastname
-        else:
-            self.fullname = self.firstname + " " + self.lastname
-
-    def debugprint(self):
-        """
-        Print out all values for test purposes
-        """
-        print("Barcode Version:", self.barcode_version)
-        print("PDI:", self.pdi)
-        print("PDT:", self.pdt, ":", self.pdtname)
-        print("EDIPI:", self.edipi)
-        print("Name:", self.fullname)
-        print("DOB:", self.dob.strftime("%x"))
-        print("Category:", self.pcc, ":", self.category)
-        print("Branch:", self.branch, "(" + self.bc + ")")
-        print("PECT:", self.pect, ":", self.pectdesc)
-        print("Rank:", self.rank)
-        print("PayPlan: ", self.ppc, ":", self.ppgc, sep="")
-        print("Issued:", self.issuedate.strftime("%x"))
-        print("Exp:", self.expdate.strftime("%x"))
-        print("InstanceID:", self.instanceid)
-
-    def __str__(self):
-        return "PDF417Barcode" + str(self.__dict__)
-
+        self.indices = {
+            'barcode_version': (0, 1),
+            'pdi': (94, 6),
+            'edipi': (1, 7),
+            'firstname': (16, 20),
+            'initial': (36, 1),
+            'lastname': (37, 25),
+            'dob': (63, 4),
+            'pcc': (65, 1),
+            'category': (70, 1),
+            'branch': (71, 1),
+            'rank': (69, 6),
+            'ppc': (75, 2),
+            'ppgc': (77, 2)
+        }
+        self.barcode_version = self.read(self.data, *self.indices['barcode_version'])
+        self.pdi = self.read(self.data, *self.indices['pdi'])
+        self.edipi = self.readnum(self.data, *self.indices['edipi'])
+        self.firstname = self.read(self.data, *self.indices['firstname']).strip()
+        self.initial = self.read(self.data, *self.indices['initial']).strip()
+        self.lastname = self.read(self.data, *self.indices['lastname']).strip()
+        self.name = f"{self.firstname} {self.initial} {self.lastname}"
+        self.dob = self.readdate(self.data, self.indices['dob'][0])
+        self.pcc = self.read(self.data, *self.indices['pcc'])
+        self.category = self._getcategory(self.read(self.data, *self.indices['category']))
+        self.branch = self._getbranch(self.read(self.data, *self.indices['branch']))
+        self.rank = self.read(self.data, *self.indices['rank']).strip()
+        self.ppc = self.read(self.data, *self.indices['ppc'])
+        self.ppgc = self.read(self.data, *self.indices['ppgc'])
 
 class Code39Barcode(CACBarcode):
     """
-    Reads the Code39 Barcode on the back of CACs
-    See http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, pp. 13-14
+    Reads a Code 39 Barcode on the back of CACs
+    See http://www.cac.mil/docs/DoD-ID-Bar-Code_SDK-Formats_v7-5-0_Sep2012.pdf, pp. 15-18
     """
-
     def __init__(self, data):
         self.data = data
-
-        if len(data) != 18:
-            raise Exception
-
-        # Only version 1 supported, 18 char length
-        self.barcode_version, data = self.read(data, 1)
-        if self.barcode_version != "1":
-            print("Bad version:", self.barcode_version)
-            raise Exception
-
-        # Read PDI
-        self.pdi, data = self.readnum(data, 6)
-
-        # Read PDT
-        self.pdt, data = self.read(data, 1)
-        self.pdtname = self._getpdt(self.pdt)
-
-        # Read EDIPI
-        self.edipi, data = self.readnum(data, 7)
-
-        # Read Personnel Category
-        self.pcc, data = self.read(data, 1)
-        self.category = self._getcategory(self.pcc)
-
-        # Read Branch Code
-        self.bc, data = self.read(data, 1)
-        self.branch = self._getbranch(self.bc)
-
-        # Read Card Instance Identifier
-        self.instanceid, data = self.read(data, 1)
-
-    def debugprint(self):
-        """
-        Print out all values for test purposes
-        """
-        print("Barcode Version:", self.barcode_version)
-        print("PDI:", self.pdi)
-        print("PDT:", self.pdt, ":", self.pdtname)
-        print("EDIPI:", self.edipi)
-        print("Category:", self.pcc, ":", self.category)
-        print("Branch:", self.branch, "(" + self.bc + ")")
-        print("InstanceID:", self.instanceid)
-
-    def __str__(self):
-        return "Code39Barcode" + str(self.__dict__)
+        self.indices = {
+            'barcode_version': (0, 1),
+            'pdi':(1,6),
+            'edipi': (8, 7),
+        }
+        self.edipi = self.readnum(self.data, *self.indices['edipi'])
