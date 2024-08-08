@@ -9,7 +9,7 @@ class BarcodeScannerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Barcode Scanner App")
-        self.root.geometry("800x600")
+        self.root.state('zoomed')# Maximize the window at startup
 
         self.colors = {
             'background': '#f5f5f5',
@@ -24,7 +24,6 @@ class BarcodeScannerApp:
         self.previous_barcode_edipi = None
         self.previous_barcode_type = None
         self.scanned_edipi = {}
-
         self.create_widgets()
 
     def load_logo(self, logo_path):
@@ -153,9 +152,14 @@ class BarcodeScannerApp:
                 break
 
     def resize_columns(self):
+        min_width = 80   # Set a minimum width in pixels
+        max_width = 300  # Set a maximum width in pixels
+        
         for col in self.treeview["columns"]:
-            max_width = max(len(str(item)) * 10 for item in [self.treeview.item(row_id)['values'][self.treeview["columns"].index(col)] for row_id in self.treeview.get_children()])
-            self.treeview.column(col, width=max_width)
+            max_text_width = max(len(str(item)) * 10 for item in [self.treeview.item(row_id)['values'][self.treeview["columns"].index(col)] for row_id in self.treeview.get_children()])
+            # Constrain the column width within the min and max bounds
+            adjusted_width = min(max(max_text_width, min_width), max_width)
+            self.treeview.column(col, width=adjusted_width)
 
     def save_to_csv(self, barcode):
         with open("scanned_data.csv", mode="a", newline="") as file:
@@ -211,16 +215,33 @@ class BarcodeScannerApp:
         self.treeview.tag_configure("nomatch", background="white")
 
     def on_treeview_double_click(self, event):
-        item = self.treeview.selection()[0]
-        col = self.treeview.identify_column(event.x)
-        col_index = int(col.replace('#', '')) - 1
-        if col_index != 0:  # Make sure it's not the first column
-            value = self.treeview.item(item, 'values')[col_index]
-            new_value = simpledialog.askstring("Edit Value", f"Edit value for column {self.treeview["columns"][col_index]}:", initialvalue=value)
-            if new_value is not None:
-                values = list(self.treeview.item(item, 'values'))
-                values[col_index] = new_value
-                self.treeview.item(item, values=tuple(values))
+        # Identify the row and column under the cursor
+        region = self.treeview.identify('region', event.x, event.y)
+        if region == 'cell':
+            column = self.treeview.identify_column(event.x)
+            row = self.treeview.identify_row(event.y)
+
+            # Get the bounding box of the cell
+            x, y, width, height = self.treeview.bbox(row, column)
+            value = self.treeview.item(row, "values")[int(column[1:]) - 1]
+
+            # Create a new entry widget for editing
+            self.editing_entry = ttk.Entry(self.treeview)
+            self.editing_entry.place(x=x, y=y, width=width, height=height)
+            self.editing_entry.insert(0, value)
+            self.editing_entry.focus()
+
+            # Bind the Entry widget to handle editing completion
+            self.editing_entry.bind("<Return>", lambda e: self.save_editing(row, column))
+            self.editing_entry.bind("<FocusOut>", lambda e: self.save_editing(row, column))
+
+    def save_editing(self, row, column):
+        new_value = self.editing_entry.get()
+        values = list(self.treeview.item(row, "values"))
+        values[int(column[1:]) - 1] = new_value
+        self.treeview.item(row, values=values)
+        self.editing_entry.destroy()
+
 
 def main():
     root = tk.Tk()
