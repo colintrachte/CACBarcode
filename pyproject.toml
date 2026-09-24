@@ -1,0 +1,21 @@
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "RUF",  # Ruff-specific rules
+]
+ignore = [
+    "RUF012", # Mutable class attributes for branch/category mappings
+    "E501",   # Line too long (handled by formatter or long vector strings)
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

@@ -1,0 +1,8 @@
+# CAC & Driver's License Barcode Scanner (CACBarcode)
+#
+# Runtime Dependencies:
+# This project uses Python's standard library exclusively (datetime, re, csv, time, sys).
+# GUI components use Tkinter (included with standard Python on Windows & macOS).
+# On Debian/Ubuntu Linux: sudo apt install python3-tk
+#
+# No external runtime pip dependencies required!

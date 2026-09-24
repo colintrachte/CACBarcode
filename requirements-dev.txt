@@ -1,0 +1,2 @@
+# Development and Linting Dependencies
+ruff>=0.1.0
