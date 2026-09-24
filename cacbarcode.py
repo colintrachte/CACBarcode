@@ -289,9 +289,9 @@ class PDF417Barcode(CACBarcode):
             "branch": (71, 1),
             "pay_plan_code": (75, 2),
             "pay_grade_code": (77, 2),
-            "issue_date": (79, 4),
-            "expiration_date": (83, 4),
-            "card_instance_id": (87, 1),
+            "card_instance_id": (84, 1),
+            "issue_date": (85, 4),
+            "expiration_date": (89, 4),
             "pdi": (93, 6),
         }
         self.edipi = self.read_num(data, *self.indices["edipi"])

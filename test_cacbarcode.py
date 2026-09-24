@@ -102,6 +102,10 @@ class TestCACBarcode(unittest.TestCase):
         self.assertEqual(barcode.branch, "USA")
         self.assertEqual(barcode.category, "DoD contract employee")
         self.assertEqual(barcode.rank, "EA00")
+        self.assertEqual(barcode.issue_date.date(), datetime.date(2024, 2, 9))
+        self.assertEqual(barcode.expiration_date.date(), datetime.date(2026, 5, 31))
+        self.assertEqual(barcode.card_instance_id, "H")
+        self.assertEqual(barcode.pdi, "TONPAS")
 
     def test_cac_code39(self):
         barcode, barcode_type = decode_barcode(self.cac_code39_synth)
